@@ -12,20 +12,43 @@ reddit = praw.Reddit(
 hot_posts = reddit.subreddit("Coronavirus").hot(limit=100)
 
 id2doc = {}
-print(hot_posts)
 counter = 0
-for i, post in enumerate(hot_posts):
+listData = []
+for post in hot_posts:
     if post.selftext != "":
-        doc_id = f"reddit_{counter}"
-        counter += 1
+        titre = post.title.replace("\n", "")
+        auteur = str(post.author)
+        date = datetime.datetime.fromtimestamp(post.created_utc).strftime("%Y/%m/%d")
+        url = post.url
+        texte = post.selftext.replace("\n", "")
         doc = Document(
-            post.title,
-            post.author,
-            datetime.datetime.utcfromtimestamp(post.created_utc),
-            post.url,
-            post.selftext,
+            titre,
+            auteur,
+            date,
+            url,
+            texte,
         )
-        id2doc[doc_id] = doc
+    listData.append(("Reddit", doc))
+# print(listData)
+
+
+# for i, post in enumerate(hot_posts):
+#     if post.selftext != "":
+#         titre = post.title.replace("\n", "")
+#         auteur = str(post.author)
+#         date = datetime.datetime.fromtimestamp(post.created_utc).strftime("%Y/%m/%d")
+#         url = post.url
+#         texte = post.selftext.replace("\n", "")
+#         doc_id = f"reddit_{counter}"
+#         counter += 1
+#         doc = Document(
+#             titre,
+#             auteur,
+#             date,
+#             url,
+#             texte,
+#         )
+#         id2doc[doc_id] = doc
 
 # print(id2doc)
 
@@ -46,11 +69,9 @@ data = urllib.request.urlopen(url).read().decode("utf-8")
 dataToJson = xmltodict.parse(data)
 
 # get the specific data that i need
-docs = dataToJson["feed"]["entry"]
+adocs = dataToJson["feed"]["entry"]
 
-
-for j, aPost in enumerate(docs):
-    doc_id = f"arxiv_{counter}"
+for aPost in adocs:
     titre = aPost["title"].replace("\n", "")
     try:
         authors = ", ".join(
@@ -58,18 +79,81 @@ for j, aPost in enumerate(docs):
         )  # On fait une liste d'auteurs, séparés par une virgule
     except:
         authors = aPost["author"]["name"]  # Si l'auteur est seul, pas besoin de liste
+
     summary = aPost["summary"].replace("\n", "")  # On enlève les retours à la ligne
     date = datetime.strptime(aPost["published"], "%Y-%m-%dT%H:%M:%SZ").strftime(
         "%Y/%m/%d"
     )  # Formatage de la date en année/mois/jour avec librairie datetime
 
-    doc = Document(
+    adoc = Document(
         titre,
         authors,
         date,
         aPost["link"][1]["@href"],
         summary,
     )
-    id2doc[doc_id] = doc
+    listData.append(("Arxiv", adoc))
 
-print(id2doc)
+for origin, data in listData:
+    id = f"{origin}_{counter}"
+    id2doc[id] = data
+    counter += 1
+
+# print(id2doc)
+# for j, aPost in enumerate(docs):
+#     doc_id = f"arxiv_{counter}"
+#     titre = aPost["title"].replace("\n", "")
+#     try:
+#         authors = ", ".join(
+#             [a["name"] for a in aPost["author"]]
+#         )  # On fait une liste d'auteurs, séparés par une virgule
+#     except:
+#         authors = aPost["author"]["name"]  # Si l'auteur est seul, pas besoin de liste
+#     summary = aPost["summary"].replace("\n", "")  # On enlève les retours à la ligne
+#     date = datetime.strptime(aPost["published"], "%Y-%m-%dT%H:%M:%SZ").strftime(
+#         "%Y/%m/%d"
+#     )  # Formatage de la date en année/mois/jour avec librairie datetime
+
+#     doc = Document(
+#         titre,
+#         authors,
+#         date,
+#         aPost["link"][1]["@href"],
+#         summary,
+#     )
+#     id2doc[doc_id] = doc
+
+# print(id2doc)
+
+
+id2aut = {}
+authors = {}
+idAuthor = 0
+for doc in id2doc.values():
+    if doc.auteur not in id2aut:
+        idAuthor += 1
+        authors[idAuthor] = Author(doc.auteur)
+        id2aut[doc.auteur] = authors[idAuthor]
+
+from Corpus import Corpus
+
+corpus = Corpus("Mon corpus")
+
+for origin, d in listData:
+    corpus.add(d)
+
+# print(corpus)
+import pickle
+
+with open("corpus.pkl", "wb") as f:
+    pickle.dump(corpus, f)
+
+# Supression de la variable "corpus"
+del corpus
+
+# Ouverture du fichier, puis lecture avec pickle
+with open("corpus.pkl", "rb") as f:
+    corpus = pickle.load(f)
+
+# La variable est réapparue
+# print(corpus)

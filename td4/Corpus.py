@@ -1,4 +1,4 @@
-from td4.Author import Author
+from Author import Author
 
 
 class Corpus:
@@ -14,6 +14,8 @@ class Corpus:
         if doc.auteur not in self.id2aut:
             self.naut += 1
             self.authors[self.naut] = Author(doc.auteur)
+            self.id2aut[doc.auteur] = self.naut
+
         self.authors[self.id2aut[doc.auteur]].add(doc.texte)
         self.ndoc += 1
         self.id2doc[self.ndoc] = doc
