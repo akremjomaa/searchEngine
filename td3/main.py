@@ -69,16 +69,21 @@ corpusDataFrame = pd.DataFrame({"id": identifiants, "text": corpus, "origin": or
 # get the dataFrame from the csv instead of calling APIS each time
 
 # corpusDataFrame = pd.read_csv("td3/myData.csv")
-print(corpusDataFrame)
+# print(corpusDataFrame)
 
 print("Longueur du corpus : " + str(len(corpus)))
+import pickle
 
-# for doc in corpus:
-#     print("Nombre de phrases : " + str(len(doc.split("."))))
-#     print("Nombre de mots : " + str(len(doc.split(" "))))
+with open("out.pkl", "wb") as f:
+    pickle.dump(corpusDataFrame, f)
+with open("out.pkl", "rb") as f:
+    corpusLoaded = pickle.load(f)
 
+corpusPlus100 = [doc for doc in corpusLoaded["text"] if len(doc) > 100]
 
-corpusPlus100 = [doc for doc in corpus if len(doc) > 100]
-
-print(len(corpusPlus100))
+print("Longueur du corpus filtré : " + str(len(corpusPlus100)))
+for doc in corpusPlus100:
+    print("Nombre de phrases : " + str(len(doc.split("."))))
+    print("Nombre de mots : " + str(len(doc.split(" "))))
 uniqueChain = " ".join(corpusPlus100)
+print(uniqueChain)
