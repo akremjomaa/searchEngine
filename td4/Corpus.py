@@ -1,4 +1,5 @@
 from Author import Author
+from decorators import singleton
 
 
 class Corpus:

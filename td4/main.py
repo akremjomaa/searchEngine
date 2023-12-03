@@ -1,7 +1,11 @@
 import datetime
 import praw
-from Document import Document
 from Author import Author
+import sys
+from document_factory import DocumentFactory
+
+
+sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
 reddit = praw.Reddit(
     client_id="UKtZgFhv6izOz1HVZYi4iQ",
@@ -9,19 +13,23 @@ reddit = praw.Reddit(
     user_agent="Test App",
 )
 
-hot_posts = reddit.subreddit("Coronavirus").hot(limit=100)
-
+hot_posts = reddit.subreddit("Handball").hot(limit=100)
 id2doc = {}
 counter = 0
 listData = []
 for post in hot_posts:
     if post.selftext != "":
-        titre = post.title.replace("\n", "")
+        titre = (
+            post.title.encode("utf-8", errors="ignore")
+            .decode("utf-8")
+            .replace("\n", "")
+        )
         auteur = str(post.author)
         date = datetime.datetime.fromtimestamp(post.created_utc).strftime("%Y/%m/%d")
         url = post.url
         texte = post.selftext.replace("\n", "")
-        doc = Document(
+        doc = DocumentFactory.create_document(
+            "Reddit",
             titre,
             auteur,
             date,
@@ -29,28 +37,6 @@ for post in hot_posts:
             texte,
         )
     listData.append(("Reddit", doc))
-# print(listData)
-
-
-# for i, post in enumerate(hot_posts):
-#     if post.selftext != "":
-#         titre = post.title.replace("\n", "")
-#         auteur = str(post.author)
-#         date = datetime.datetime.fromtimestamp(post.created_utc).strftime("%Y/%m/%d")
-#         url = post.url
-#         texte = post.selftext.replace("\n", "")
-#         doc_id = f"reddit_{counter}"
-#         counter += 1
-#         doc = Document(
-#             titre,
-#             auteur,
-#             date,
-#             url,
-#             texte,
-#         )
-#         id2doc[doc_id] = doc
-
-# print(id2doc)
 
 
 import urllib, urllib.request
@@ -85,7 +71,8 @@ for aPost in adocs:
         "%Y/%m/%d"
     )  # Formatage de la date en année/mois/jour avec librairie datetime
 
-    adoc = Document(
+    adoc = DocumentFactory.create_document(
+        "Arxiv",
         titre,
         authors,
         date,
@@ -94,37 +81,11 @@ for aPost in adocs:
     )
     listData.append(("Arxiv", adoc))
 
+
 for origin, data in listData:
     id = f"{origin}_{counter}"
     id2doc[id] = data
     counter += 1
-
-# print(id2doc)
-# for j, aPost in enumerate(docs):
-#     doc_id = f"arxiv_{counter}"
-#     titre = aPost["title"].replace("\n", "")
-#     try:
-#         authors = ", ".join(
-#             [a["name"] for a in aPost["author"]]
-#         )  # On fait une liste d'auteurs, séparés par une virgule
-#     except:
-#         authors = aPost["author"]["name"]  # Si l'auteur est seul, pas besoin de liste
-#     summary = aPost["summary"].replace("\n", "")  # On enlève les retours à la ligne
-#     date = datetime.strptime(aPost["published"], "%Y-%m-%dT%H:%M:%SZ").strftime(
-#         "%Y/%m/%d"
-#     )  # Formatage de la date en année/mois/jour avec librairie datetime
-
-#     doc = Document(
-#         titre,
-#         authors,
-#         date,
-#         aPost["link"][1]["@href"],
-#         summary,
-#     )
-#     id2doc[doc_id] = doc
-
-# print(id2doc)
-
 
 id2aut = {}
 authors = {}
@@ -137,23 +98,35 @@ for doc in id2doc.values():
 
 from Corpus import Corpus
 
-corpus = Corpus("Mon corpus")
+CorpusNoSingleton = Corpus
+del Corpus
+corpus = CorpusNoSingleton("Mon corpus")
 
-for origin, d in listData:
-    corpus.add(d)
 
-# print(corpus)
+def fillCorpus(docType=""):
+    for origin, d in listData:
+        if docType == origin:
+            corpus.add(d)
+        else:
+            corpus.add(d)
+
+
+fillCorpus()
 import pickle
 
 with open("corpus.pkl", "wb") as f:
     pickle.dump(corpus, f)
 
-# Supression de la variable "corpus"
-del corpus
 
-# Ouverture du fichier, puis lecture avec pickle
+from decorators import singleton
+
+
+@singleton
+class Corpus(CorpusNoSingleton):
+    pass
+
+
 with open("corpus.pkl", "rb") as f:
     corpus = pickle.load(f)
 
-# La variable est réapparue
-# print(corpus)
+print(corpus)
