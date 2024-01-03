@@ -75,7 +75,7 @@ def fetch_reddit_data(query, limit=10):
                     url,
                     texte,
                 )
-            listData.append(("Reddit", doc))
+                listData.append(("Reddit", doc))
     except (
         prawcore.exceptions.Redirect,
         prawcore.exceptions.Forbidden,
