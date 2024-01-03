@@ -1,5 +1,5 @@
-from Author import Author
-from decorators import singleton
+from .Author import Author
+from .decorators import singleton
 
 
 class Corpus:
@@ -27,7 +27,9 @@ class Corpus:
             docs = list(sorted(docs, key=lambda doc: doc.titre))[:ndocs]
         if tri == "date":
             docs = list(sorted(docs, key=lambda doc: doc.date))[:ndocs]
-        print("\n".join(list(map(repr, docs))))
+        # print("\n".join(list(map(repr, docs))).join("\n\n"))
+        for doc in docs:
+            print(f"Titre: {doc.titre}\nAuteur: {doc.auteur}\nDate: {doc.date}\nURL: {doc.url}\nTexte: {doc.texte}\n\n")
 
     def __repr__(self):
         docs = list(self.id2doc.values())

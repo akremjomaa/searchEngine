@@ -1,4 +1,4 @@
-from Document import RedditDocument, ArxivDocument
+from .Document import RedditDocument, ArxivDocument
 
 
 class DocumentFactory:

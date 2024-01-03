@@ -1,0 +1,18 @@
+# Virtual environments files
+env
+/env
+env/
+
+# Python pycache files
+__pycache__
+/__pycache__
+__pycache__/
+/__pycache__/
+
+
+# Development files
+*.dev
+/dev
+/dev/
+/dev/*
+ref.*
