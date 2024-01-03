@@ -75,7 +75,7 @@ def fetch_reddit_data(query, limit=10):
                     url,
                     texte,
                 )
-                listData.append(("Reddit", doc))
+            listData.append(("Reddit", doc))
     except (
         prawcore.exceptions.Redirect,
         prawcore.exceptions.Forbidden,
@@ -215,125 +215,58 @@ if __name__ == "__main__":
     del Corpus
     corpus = CorpusNoSingleton("Mon corpus")
     nbPosts = 0
-    print("Welcome to the document retrieval system (V2).\n")
+
+    print("Welcome to the document retrieval system.\n")
     print("This work was made by GHIZLAN MOQIM and JOMAA AKREM.\n")
-    query = input("Enter a query to search for:\n> ")
-    limit = input("Enter the maximum number of posts to fetch: Default is 10\n> ")
-    if limit == "":
-        limit = 10
-    else:
-        try:
-            limit = int(limit)
-        except ValueError:
-            print("[ERRER] -- Invalid input!")
-            sys.exit(1)
-
-    print("-" * 50)
-    print("Fetching data from Reddit...")
-    fetch_reddit_data(query, limit)
-
-    print("-" * 50)
-    print("Fetching data from Arxiv...")
-    fetch_arxiv_data(query, limit)
-
-    print("-" * 50)
-    print("Filling the document dictionary...")
-    fillDocDict()
-
-    print("-" * 50)
-    print("Filling the authors dictionary...")
-    fillAuthorsDict()
-
-    print("-" * 50)
-    print("Filling the corpus...")
-    fillCorpus()
-
-    print("-" * 50)
-    print("Saving the corpus...")
-    with open("corpus.pkl", "wb") as f:
-        dill.dump(corpus, f)
-    print("Done!")
-    print(f"{nbPosts} posts were added to the corpus.")
-
-
-
-    running = True
-    while running:
-
-        inp = input("\n\nChoose an option:\n1) See the corpus\n2) Search for a keyword\n3) See the concordance of a keyword\n4) See the stats of the corpus\n5) Exit\n> ")
-
-        if inp == "1":
-
-            print("=" * 50)
-            print(corpus)
-            print("=" * 50)
-
-        elif inp == "2":
-
-            query = input("Enter a query to search for:\n> ")
-            n = input("Choose a context length (default is 30):\n> ")
-            nb = 30
-            if n != "":
-                try:
-                    nb = int(n)
-                except ValueError:
-                    print("[ERRER] -- Invalid input!")
-                    print("30 will be used as the default value.")
-            else:
-                nb = 30
-            corpus.search(query, context_length=nb)
-
-        elif inp == "3":
-
-            query = input("Enter a query to search for:\n> ")
-            nl = input("Choose a left context length (default is 30):\n> ")
-            nr = input("Choose a right context length (default is 30):\n> ")
-            nl = 30
-            nr = 30
-            if nl != "":
-                try:
-                    nl = int(nl)
-                except ValueError:
-                    print("[ERRER] -- Invalid input!")
-                    print("30 will be used as the default value.")
-            else:
-                nl = 30
-            if nr != "":
-                try:
-                    nr = int(nr)
-                except ValueError:
-                    print("[ERRER] -- Invalid input!")
-                    print("30 will be used as the default value.")
-            else:
-                nr = 30
-            df = corpus.concorde(query, taill=(nl, nr))
-
-
-            if len(df) == 0:
-                print("No matches found.")
-            else:
-                print(df)
-
-        elif inp == "4":
-
-            n = input("Enter the number of most frequent words to show (default is 15):\n> ")
-            n = 15
-            if n != "":
-                try:
-                    n = int(n)
-                except ValueError:
-                    print("[ERRER] -- Invalid input!")
-                    print("15 will be used as the default value.")
-            else:
-                n = 15
-            corpus.stats(top_n=n)
-
-        elif inp == "5":
-
-            running = False
-
+    opt = input("1) Fetch new data\n2) Exit\n> ")
+    if opt == "1":
+        query = input("Enter a query to search for:\n> ")
+        limit = input("Enter the maximum number of posts to fetch: Default is 10\n> ")
+        if limit == "":
+            limit = 10
         else:
+            try:
+                limit = int(limit)
+            except ValueError:
+                print("[ERRER] -- Invalid input!")
+                sys.exit(1)
 
-            print("Invalid input!")
-            continue
+        print("-" * 50)
+        print("Fetching data from Reddit...")
+        fetch_reddit_data(query, limit)
 
+        print("-" * 50)
+        print("Fetching data from Arxiv...")
+        fetch_arxiv_data(query, limit)
+
+        print("-" * 50)
+        print("Filling the document dictionary...")
+        fillDocDict()
+
+        print("-" * 50)
+        print("Filling the authors dictionary...")
+        fillAuthorsDict()
+
+        print("-" * 50)
+        print("Filling the corpus...")
+        fillCorpus()
+
+        print("-" * 50)
+        print("Saving the corpus...")
+        with open("corpus.pkl", "wb") as f:
+            dill.dump(corpus, f)
+        print("Done!")
+        print(f"{nbPosts} posts were added to the corpus.")
+
+        print("Here is your corpus: \n")
+        print("=" * 50)
+        print(corpus)
+        print("=" * 50)
+        print('STAT')
+        print(corpus.stats())
+        print("=" * 50)
+
+    elif opt == "2":
+        print("Goodbye!")
+    else:
+        print("Invalid option!")

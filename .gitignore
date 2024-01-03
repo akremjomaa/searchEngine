@@ -16,3 +16,7 @@ __pycache__/
 /dev/
 /dev/*
 ref.*
+
+# Build files
+*.pkl
+
