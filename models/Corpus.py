@@ -14,6 +14,8 @@ class Corpus:
         self.ndoc = 0
         self.naut = 0
         self.concatenated_text = None
+        self.vocabulary = set()
+        self.word_frequencies = None
 
     def add(self, doc):
         if doc.auteur not in self.id2aut:
@@ -24,6 +26,7 @@ class Corpus:
         self.authors[self.id2aut[doc.auteur]].add(doc.texte)
         self.ndoc += 1
         self.id2doc[self.ndoc] = doc
+        self.update_vocabulary(doc.texte)
 
     def show(self, ndocs=-1, tri="titre"):
         docs = list(self.id2doc.values())
@@ -45,10 +48,14 @@ class Corpus:
     def search(self, keyword, context_length=30):
         self.update_concatenated_text()
 
-        matches = list(re.finditer(
-            rf"\b{re.escape(keyword)}\b", self.concatenated_text, re.IGNORECASE
-        ))
-        print(f"Number of passages containing the keyword '{keyword}': {len(matches)}\n")
+        matches = list(
+            re.finditer(
+                rf"\b{re.escape(keyword)}\b", self.concatenated_text, re.IGNORECASE
+            )
+        )
+        print(
+            f"Number of passages containing the keyword '{keyword}': {len(matches)}\n"
+        )
         print("Passages containing the keyword:\n")
 
         for match in matches:
@@ -58,7 +65,6 @@ class Corpus:
             print(f"{passage}\n")
 
         return
-
 
     def concorde(self, motif, taill=(20, 20)):
         if self.concatenated_text is None:
@@ -96,6 +102,53 @@ class Corpus:
         print(f"{top_n} most frequent words in the corpus :")
         for mot, occurences in mots_frequents:
             print(f"{mot}: {occurences} occurrences")
+
+    def update_vocabulary(self, text):
+        words = re.split(r'\s+|[.,;\'"!?()]', text)
+        words = [word for word in words if word != ""]
+        words = [word for word in words if word.isalpha()]
+        words = [word.lower() for word in words]
+        self.vocabulary.update(words)
+
+    def get_vocabulary_stats(self):
+        print(f"Number of words in the vocabulary: {len(self.vocabulary)}\n")
+        print("Words in the vocabulary:\n")
+        print(self.vocabulary)
+
+    def update_word_frequencies(self):
+        self.update_concatenated_text()
+        cleaned_text = self.nettoyer_texte(self.concatenated_text)
+        words = re.split(r'\s+|[.,;\'"!?()]', cleaned_text)
+        words = [word for word in words if word != ""]
+        words = [word for word in words if word.isalpha()]
+        words = [word.lower() for word in words]
+        self.word_frequencies = Counter(words)
+
+        doc_word_freq = Counter()
+        for doc in self.id2doc.values():
+            doc_text = self.nettoyer_texte(doc.texte)
+            doc_words = set(re.split(r'\s+|[.,;\'"!?()]', doc_text))
+            doc_words = {word.lower() for word in doc_words if word.isalpha()}
+            doc_word_freq.update(doc_words)
+
+        for word, freq in self.word_frequencies.items():
+            self.word_frequencies[word] = {
+                "term_frequency": freq,
+                "document_frequency": doc_word_freq[word],
+            }
+
+    def get_word_frequencies(self):
+        if self.word_frequencies is None:
+            self.update_word_frequencies()
+
+        df = pd.DataFrame(
+            list(self.word_frequencies.items()), columns=["Word", "Frequencies"]
+        )
+        df[["Term Frequency", "Document Frequency"]] = pd.DataFrame(
+            df["Frequencies"].tolist(), index=df.index
+        )
+        df.drop(columns=["Frequencies"], inplace=True)
+        return df
 
     def __repr__(self):
         docs = list(self.id2doc.values())

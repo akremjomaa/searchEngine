@@ -217,8 +217,8 @@ if __name__ == "__main__":
     nbPosts = 0
     print("Welcome to the document retrieval system (V2).\n")
     print("This work was made by GHIZLAN MOQIM and JOMAA AKREM.\n")
-    query = input("Enter a query to search for:\n> ")
-    limit = input("Enter the maximum number of posts to fetch: Default is 10\n> ")
+    query = input("Enter a query to search for:\nUSER > ")
+    limit = input("Enter the maximum number of posts to fetch: Default is 10\nUSER > ")
     if limit == "":
         limit = 10
     else:
@@ -255,23 +255,20 @@ if __name__ == "__main__":
     print("Done!")
     print(f"{nbPosts} posts were added to the corpus.")
 
-
-
     running = True
     while running:
-
-        inp = input("\n\nChoose an option:\n1) See the corpus\n2) Search for a keyword\n3) See the concordance of a keyword\n4) See the stats of the corpus\n5) Exit\n> ")
+        inp = input(
+            "\n\nChoose an option:\n1) See the corpus\n2) Search for a keyword\n3) See the concordance of a keyword\n4) See the stats of the corpus\n5) See the vocabulary\n6) See word frequencies\n7) Exit\nUSER >"
+        )
 
         if inp == "1":
-
             print("=" * 50)
             print(corpus)
             print("=" * 50)
 
         elif inp == "2":
-
-            query = input("Enter a query to search for:\n> ")
-            n = input("Choose a context length (default is 30):\n> ")
+            query = input("Enter a query to search for:\nUSER > ")
+            n = input("Choose a context length (default is 30):\nUSER > ")
             nb = 30
             if n != "":
                 try:
@@ -284,10 +281,9 @@ if __name__ == "__main__":
             corpus.search(query, context_length=nb)
 
         elif inp == "3":
-
-            query = input("Enter a query to search for:\n> ")
-            nl = input("Choose a left context length (default is 30):\n> ")
-            nr = input("Choose a right context length (default is 30):\n> ")
+            query = input("Enter a query to search for:\nUSER > ")
+            nl = input("Choose a left context length (default is 30):\nUSER > ")
+            nr = input("Choose a right context length (default is 30):\nUSER > ")
             nl = 30
             nr = 30
             if nl != "":
@@ -308,15 +304,15 @@ if __name__ == "__main__":
                 nr = 30
             df = corpus.concorde(query, taill=(nl, nr))
 
-
             if len(df) == 0:
                 print("No matches found.")
             else:
                 print(df)
 
         elif inp == "4":
-
-            n = input("Enter the number of most frequent words to show (default is 15):\n> ")
+            n = input(
+                "Enter the number of most frequent words to show (default is 15):\nUSER > "
+            )
             n = 15
             if n != "":
                 try:
@@ -329,11 +325,14 @@ if __name__ == "__main__":
             corpus.stats(top_n=n)
 
         elif inp == "5":
+            corpus.get_vocabulary_stats()
 
+        elif inp == "6":
+            print(corpus.get_word_frequencies())
+
+        elif inp == "7":
             running = False
 
         else:
-
             print("Invalid input!")
             continue
-
