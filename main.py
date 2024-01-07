@@ -9,7 +9,6 @@ import xmltodict
 import dill
 import os
 from models.Corpus import Corpus
-
 from dotenv import load_dotenv
 
 ########################################################################################
@@ -258,7 +257,20 @@ if __name__ == "__main__":
     running = True
     while running:
         inp = input(
-            "\n\nChoose an option:\n1) See the corpus\n2) Search for a keyword\n3) See the concordance of a keyword\n4) See the stats of the corpus\n5) See the vocabulary\n6) See word frequencies\n7) Exit\nUSER >"
+            """
+
+Choose an option:
+1) See the corpus
+2) Search for a keyword
+3) See the concordance of a keyword
+4) See the stats of the corpus
+5) See the vocabulary
+6) See word frequencies
+7) See the vocab
+8) See the term frequency matrix
+9) Use the scoring system
+10) Exit
+USER >"""
         )
 
         if inp == "1":
@@ -331,6 +343,29 @@ if __name__ == "__main__":
             print(corpus.get_word_frequencies())
 
         elif inp == "7":
+            corpus.get_vocab()
+
+        elif inp == "8":
+            print(corpus.build_term_frequency_matrix())
+
+        elif inp == "9":
+            query = input("Enter a query to search for:\nUSER > ")
+            if query == "":
+                print("[FAILED] -- Your query did not match, please try again")
+                continue
+            print(f"Searching for the best results for you ...")
+            scores = corpus.rank_after_scoring(corpus.search_on_scoring(query))
+            print("*" * 50)
+            print(f"Here are the best {len(scores)} result(s) for your query :\n")
+            for id, score in scores:
+                print("-" * 50)
+                print(
+                    f"Document:\nTitle : {corpus.id2doc[id].titre}\nAuthor : {corpus.id2doc[id].auteur}\nText : {corpus.id2doc[id].texte}\nURL : {corpus.id2doc[id].url}\nDate : {corpus.id2doc[id].date}\n"
+                )
+                print(f"This document has a score of {score} concerning your request\n")
+                print("-" * 50)
+            print("*" * 50)
+        elif inp == "10":
             running = False
 
         else:

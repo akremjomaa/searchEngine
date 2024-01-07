@@ -3,6 +3,8 @@ from .decorators import singleton
 import re
 import pandas as pd
 from collections import Counter
+from scipy.sparse import csr_matrix
+import numpy as np
 
 
 class Corpus:
@@ -16,6 +18,7 @@ class Corpus:
         self.concatenated_text = None
         self.vocabulary = set()
         self.word_frequencies = None
+        self.vocab = dict()
 
     def add(self, doc):
         if doc.auteur not in self.id2aut:
@@ -67,8 +70,7 @@ class Corpus:
         return
 
     def concorde(self, motif, taill=(20, 20)):
-        if self.concatenated_text is None:
-            self.update_concatenated_text()
+        self.update_concatenated_text()
         matches = re.finditer(motif, self.concatenated_text)
         concordance_data = []
 
@@ -104,16 +106,106 @@ class Corpus:
             print(f"{mot}: {occurences} occurrences")
 
     def update_vocabulary(self, text):
-        words = re.split(r'\s+|[.,;\'"!?()]', text)
-        words = [word for word in words if word != ""]
-        words = [word for word in words if word.isalpha()]
-        words = [word.lower() for word in words]
+        words = self.prepare_text(text)
         self.vocabulary.update(words)
+        self.vocabulary = set(sorted(self.vocabulary))
+
+        for word in words:
+            if word not in self.vocab:
+                self.vocab[word] = {
+                    "id": len(self.vocab) + 1,
+                    "total_occurences": 0,
+                    "documents_occurences": 0,
+                }
+            self.vocab[word]["total_occurences"] += 1
+            self.vocab[word]["documents_occurences"] += 1
+
+    def get_vocab(self):
+        for word, data in self.vocab.items():
+            print(f"{word}: {data}")
+        print(f"Number of words in the vocabulary: {len(self.vocab)}\n")
 
     def get_vocabulary_stats(self):
         print(f"Number of words in the vocabulary: {len(self.vocabulary)}\n")
         print("Words in the vocabulary:\n")
         print(self.vocabulary)
+
+    def prepare_text(self, text):
+        words = re.split(r'\s+|[.,;\'"!?()]', text)
+        words = [word for word in words if word != ""]
+        words = [word for word in words if word.isalpha()]
+        words = [word.lower() for word in words]
+        return words
+
+    def build_term_frequency_matrix(self):
+        rows = list()
+        cols = list()
+        values = list()
+        for doc_id, doc in self.id2doc.items():
+            words = self.prepare_text(doc.texte)
+            wf = Counter(words)
+            for w, freq in wf.items():
+                if w not in self.vocab:
+                    print(f"[ERRER] -- The word | {w} | is not in the vocabulary")
+                else:
+                    cols.append(
+                        self.vocab[w]["id"] - 1
+                    )  # -1 because of the index start at 0 and not 1
+                    rows.append(doc_id - 1)
+                    values.append(freq)
+
+        return csr_matrix(
+            (values, (rows, cols)), shape=(len(self.id2doc), len(self.vocab))
+        )
+
+    def query_to_new_vector(self, query):
+        local_vector = np.zeros(len(self.vocab))
+
+        for w in self.prepare_text(query):
+            if w not in self.vocab:
+                print(
+                    f"[ERRER] -- Errer occured while trying to create the vector for the word | {w} |"
+                )
+            else:
+                dx = (
+                    self.vocab[w]["id"] - 1
+                )  # get the word id by ajdusting the based-0-indextion
+                local_vector[
+                    dx
+                ] += 1  # increment the value of the vector at the index of the word
+
+        return local_vector
+
+    def calculate_cosine_similarity(self, v1, v2):
+        norm_v1 = np.linalg.norm(v1)
+        norm_v2 = np.linalg.norm(v2)
+
+        if norm_v1 == 0 or norm_v2 == 0:
+            return 0
+        return np.dot(v1, v2) / (norm_v1 * norm_v2)
+
+    def search_on_scoring(self, q):
+        # print('[DEBUGING]')
+        # print("Query text after preprocessing:", self.prepare_text(q))
+        # print("Query vector:", self.query_to_new_vector(q))
+        # print("Term frequency matrix:", self.build_term_frequency_matrix())
+        # print("Cosine similarity:", self.calculate_cosine_similarity(np.array([1, 2, 3]), np.array([4, 5, 6])))
+        # print('[END DEBUGING]')
+        qv = self.query_to_new_vector(q)  # qv: query vector
+        term_frq_mat = self.build_term_frequency_matrix()
+        scoring = list()
+        for id in self.id2doc.keys():
+            dv = term_frq_mat[
+                id - 1
+            ].toarray()  # converting the sparse mat into a dense mat
+            score = self.calculate_cosine_similarity(qv, dv.flatten())
+            scoring.append((id, score))
+        return scoring
+
+    def rank_after_scoring(self, scores):
+        scores = sorted(scores, key=lambda x: x[1], reverse=True)
+        scores = [(id, score) for id, score in scores if score > 0]
+        return scores
 
     def update_word_frequencies(self):
         self.update_concatenated_text()

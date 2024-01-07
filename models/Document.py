@@ -1,5 +1,9 @@
+import itertools
 class Document:
+    object_id = itertools.count()
+
     def __init__(self, titre, auteur, date, url, texte, type=""):
+        self.id = next(Document.object_id)
         self.titre = titre
         self.auteur = auteur
         self.date = date
