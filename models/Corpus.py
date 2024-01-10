@@ -5,20 +5,39 @@ import pandas as pd
 from collections import Counter
 from scipy.sparse import csr_matrix
 import numpy as np
+import dill
+import itertools
+import random
 
 
+def create_new_ref_number():
+    return str(random.randint(1000000000, 9999999999))
+
+
+@singleton
 class Corpus:
     def __init__(self, nom):
+        self.id = create_new_ref_number()
         self.nom = nom
         self.authors = {}
         self.id2aut = {}
-        self.id2doc = {}
+        self.id2doc = {}  # key: id, value: doc
         self.ndoc = 0
         self.naut = 0
         self.concatenated_text = None
         self.vocabulary = set()
-        self.word_frequencies = None
-        self.vocab = dict()
+        self.word_frequencies = (
+            None  # key: word, value: {term_frequency, document_frequency}
+        )
+        self.vocab = (
+            dict()
+        )  # key: word, value: {id, total_occurences, documents_occurences}
+
+    def get_name(self):
+        return self.nom
+
+    def set_name(self, nom):
+        self.nom = nom
 
     def add(self, doc):
         if doc.auteur not in self.id2aut:
@@ -56,18 +75,15 @@ class Corpus:
                 rf"\b{re.escape(keyword)}\b", self.concatenated_text, re.IGNORECASE
             )
         )
-        print(
-            f"Number of passages containing the keyword '{keyword}': {len(matches)}\n"
-        )
-        print("Passages containing the keyword:\n")
+        passages = []
 
         for match in matches:
             start_pos = max(0, match.start() - context_length)
             end_pos = min(len(self.concatenated_text), match.end() + context_length)
             passage = self.concatenated_text[start_pos:end_pos]
-            print(f"{passage}\n")
+            passages.append(passage)
 
-        return
+        return passages
 
     def concorde(self, motif, taill=(20, 20)):
         self.update_concatenated_text()
@@ -104,6 +120,8 @@ class Corpus:
         print(f"{top_n} most frequent words in the corpus :")
         for mot, occurences in mots_frequents:
             print(f"{mot}: {occurences} occurrences")
+
+    ###############################################################
 
     def update_vocabulary(self, text):
         words = self.prepare_text(text)
@@ -185,12 +203,6 @@ class Corpus:
         return np.dot(v1, v2) / (norm_v1 * norm_v2)
 
     def search_on_scoring(self, q):
-        # print('[DEBUGING]')
-        # print("Query text after preprocessing:", self.prepare_text(q))
-        # print("Query vector:", self.query_to_new_vector(q))
-        # print("Term frequency matrix:", self.build_term_frequency_matrix())
-        # print("Cosine similarity:", self.calculate_cosine_similarity(np.array([1, 2, 3]), np.array([4, 5, 6])))
-        # print('[END DEBUGING]')
         qv = self.query_to_new_vector(q)  # qv: query vector
         term_frq_mat = self.build_term_frequency_matrix()
         scoring = list()
@@ -241,6 +253,14 @@ class Corpus:
         )
         df.drop(columns=["Frequencies"], inplace=True)
         return df
+
+    def load_corpus(self):
+        with open(f"corpus.pkl", "rb") as f:
+            self.__dict__.update(dill.load(f).__dict__)
+
+    def save(self):
+        with open(f"corpus.pkl", "wb") as f:
+            dill.dump(self, f)
 
     def __repr__(self):
         docs = list(self.id2doc.values())

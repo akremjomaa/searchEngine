@@ -1,4 +1,3 @@
-from datetime import datetime
 import praw
 import prawcore
 import sys
@@ -10,6 +9,7 @@ import dill
 import os
 from models.Corpus import Corpus
 from dotenv import load_dotenv
+from datetime import datetime
 
 ########################################################################################
 ############### Setup the settings ( Load environment variables and set stdout to utf-8 )
@@ -182,6 +182,9 @@ No 'entry' key found in the (Arxiv) API response. Unable to retrieve document in
 
 
 def fillDocDict():
+    global id2doc
+    global listData
+
     counter = 0
     for origin, data in listData:
         id = f"{origin}_{counter}"
@@ -191,6 +194,10 @@ def fillDocDict():
 
 def fillAuthorsDict():
     idAuthor = 0
+    global authors
+    global id2aut
+    global id2doc
+    global nbPosts
     for doc in id2doc.values():
         if doc.auteur not in id2aut:
             idAuthor += 1
@@ -200,6 +207,7 @@ def fillAuthorsDict():
 
 def fillCorpus(docType=""):
     global nbPosts
+    global corpus
     for origin, d in listData:
         if docType == origin:
             corpus.add(d)
@@ -209,51 +217,15 @@ def fillCorpus(docType=""):
             nbPosts += 1
 
 
-if __name__ == "__main__":
-    CorpusNoSingleton = Corpus
-    del Corpus
-    corpus = CorpusNoSingleton("Mon corpus")
-    nbPosts = 0
-    print("Welcome to the document retrieval system (V2).\n")
-    print("This work was made by GHIZLAN MOQIM and JOMAA AKREM.\n")
-    query = input("Enter a query to search for:\nUSER > ")
-    limit = input("Enter the maximum number of posts to fetch: Default is 10\nUSER > ")
-    if limit == "":
-        limit = 10
-    else:
-        try:
-            limit = int(limit)
-        except ValueError:
-            print("[ERRER] -- Invalid input!")
-            sys.exit(1)
+def get_existing_data():
+    global corpus
+    with open(f"./corpus.pkl", "rb") as f:
+        corpus = dill.load(f)
+    print(f"{len(corpus.id2doc)} posts were retrieved from the corpus.")
+    process_user(corpus)
 
-    print("-" * 50)
-    print("Fetching data from Reddit...")
-    fetch_reddit_data(query, limit)
 
-    print("-" * 50)
-    print("Fetching data from Arxiv...")
-    fetch_arxiv_data(query, limit)
-
-    print("-" * 50)
-    print("Filling the document dictionary...")
-    fillDocDict()
-
-    print("-" * 50)
-    print("Filling the authors dictionary...")
-    fillAuthorsDict()
-
-    print("-" * 50)
-    print("Filling the corpus...")
-    fillCorpus()
-
-    print("-" * 50)
-    print("Saving the corpus...")
-    with open("corpus.pkl", "wb") as f:
-        dill.dump(corpus, f)
-    print("Done!")
-    print(f"{nbPosts} posts were added to the corpus.")
-
+def process_user(corpus):
     running = True
     while running:
         inp = input(
@@ -290,8 +262,16 @@ USER >"""
                     print("30 will be used as the default value.")
             else:
                 nb = 30
-            corpus.search(query, context_length=nb)
-
+            passages = corpus.search(query, context_length=nb)
+            if not passages:
+                print("[ERRER] -- No matches found.")
+            else:
+                print(
+                    f"Number of passages containing the keyword '{query}': {len(passages)}\n"
+                )
+                print("Passages containing the keyword:\n")
+                for passage in passages:
+                    print(f"{passage}\n")
         elif inp == "3":
             query = input("Enter a query to search for:\nUSER > ")
             nl = input("Choose a left context length (default is 30):\nUSER > ")
@@ -371,3 +351,79 @@ USER >"""
         else:
             print("Invalid input!")
             continue
+
+
+def fetch_new_data():
+    global corpus
+    global nbPosts
+    global listData
+    global id2doc
+    global id2aut
+    global authors
+
+    listData = []
+    id2doc = {}
+    id2aut = {}
+    authors = {}
+
+    query = input("Enter a query to search for:\nUSER > ")
+    limit = input("Enter the maximum number of posts to fetch: Default is 10\nUSER > ")
+    if limit == "":
+        limit = 10
+    else:
+        try:
+            limit = int(limit)
+        except ValueError:
+            print("[ERRER] -- Invalid input!")
+            sys.exit(1)
+    print("-" * 50)
+    print("Fetching data from Reddit...")
+    fetch_reddit_data(query, limit)
+
+    print("-" * 50)
+    print("Fetching data from Arxiv...")
+    fetch_arxiv_data(query, limit)
+
+    print("-" * 50)
+    print("Filling the document dictionary...")
+    fillDocDict()
+
+    print("-" * 50)
+    print("Filling the authors dictionary...")
+    fillAuthorsDict()
+
+    print("-" * 50)
+    print("Filling the corpus...")
+    fillCorpus()
+
+    print("-" * 50)
+    print("Saving the corpus...")
+    corpus.save()
+    print("Corpus saved successfully!")
+    print(f"{len(corpus.id2doc)} posts were fetched and saved from Reddit and Arxiv.")
+    print("-" * 50)
+    process_user(corpus)
+
+
+if __name__ == "__main__":
+    corpus = Corpus("Mon corpus")
+    nbPosts = 0
+    print("Welcome to the document retrieval system (V2).\n")
+    print("This work was made by GHIZLAN MOQIM and JOMAA AKREM.\n")
+    running = True
+    while running:
+        main_option = input(
+            "\n\nChoose an option:\n1) Fetch new data\n2) Use existing data\n3) Exit\nUSER > "
+        )
+        if main_option == "1":
+            fetch_new_data()
+            continue
+        elif main_option == "2":
+            get_existing_data()
+            continue
+        elif main_option == "3":
+            running = False
+            break
+        else:
+            print("Invalid input!")
+            sys.exit(1)

@@ -1,4 +1,6 @@
 import itertools
+
+
 class Document:
     object_id = itertools.count()
 

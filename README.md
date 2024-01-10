@@ -1,4 +1,4 @@
-# Moteur de recherche en Python V2
+# Moteur de recherche en Python
 
 ---
 
@@ -96,39 +96,93 @@ $ jupyter lab
 
 Une fois que vous avez exécuté cette commande, une page web va s'ouvrir dans votre navigateur par défaut. Dans cette page, vous allez trouver le fichier `CorpusNoteBook.ipynb`, veuillez l'ouvrir. Une fois que vous avez ouvert le fichier, vous allez trouver une icône en haut à gauche qui ressemble à un bouton `play`, veuillez cliquer dessus pour exécuter le code. Une fois que vous avez cliqué sur le bouton `play`, le programme va vous demander de saisir un mot clé et un nombre de documents à retourner. Une fois que vous avez saisi ces deux informations, le programme va vous afficher les documents retournés dans le terminal.
 
+### Lancerement des tests
+
+Pour lancer les tests unitaires, veuillez suivre les étapes suivantes :
+
+- dans le dossier du projet, exécuter la commande suivante :
+
+```
+$ python3 tests.py
+```
+
+Cette commande va lancer tous les tests unitaires qui se trouvent dans le dossier `./tests`. Il executera donc 3 types de tests :
+
+- Les tests unitaires pour la classe 'Author'
+- Les tests unitaires pour les classes 'Document', 'RedditDocument' et 'ArxivDocument'
+- Les tests unitaires pour la classe 'Corpus'
+
+Une fois que vous avez exécuté cette commande, une page web va s'ouvrir dans votre navigateur par défaut. Dans cette page, vous allez trouver le fichier `CorpusNoteBook.ipynb`, veuillez l'ouvrir. Une fois que vous avez ouvert le fichier, vous allez trouver une icône en haut à gauche qui ressemble à un bouton `play`, veuillez cliquer dessus pour exécuter le code. Une fois que vous avez cliqué sur le bouton `play`, le programme va vous demander de saisir un mot clé et un nombre de documents à retourner. Une fois que vous avez saisi ces deux informations, le programme va vous afficher les documents retournés dans le terminal.
+
 ## Gestions des erreurs
 
 Une fois que vous avez lancé le projet, il y a plusieurs erreurs qui peuvent se produire. Les erreurs sont écrites entre les balises `[ERRER]`. Nnous allons les lister ici et vous donner les solutions pour les résoudre.
 
 ### Erreurs liées à l'API de Reddit
 
-#### Erreur 1
+#### Erreur 1:
 
 - `CODE-402 [ERROR] The subreddit you entered does not exist` : Indique que le subreddit n'existe pas.
 - Solution : Veuillez vérifier que le subreddit existe e.
 
-#### Erreur 2
+#### Erreur 2:
 
 - `CODE-403 | CODE-404 [ERROR] You are not allowed to access this subreddit` : Indique que vous n'avez pas les droits pour y accéder.
 - Solution : Veuillez vérifier que vous avez bien les droits pour y accéder.
 
-#### Erreur 3
+#### Erreur 3:
 
 - `CODE-500 [ERROR] An internal server error occured.` : Indique qu'il y a une erreur interne au niveau du serveur.
 - Solution : Veuillez réessayer plus tard.
 
 ### Erreurs liées à l'API d'Arxiv
 
-#### Erreur 1
+#### Erreur 1:
 
 - `CODE-400 [ERROR] Bad request` : Indique que la requête est mal formée.
 - Solution : Veuillez vérifier que la requête est bien formée.
 
-#### Erreur 2
+#### Erreur 2:
 
 - `CODE-404 [ERROR] Bad Entry` : Indique que l'entrée est mal formée.
 - Solution : Veuillez vérifier que l'entrée est bien formée.
 
+### Erreurs liées au moteur de recherche
+
+#### Erreur 1 :
+
+- `CODE-404 [FAILED]` : Indique que le mot clé entré n'a pas été trouvé.
+
+## Gestions des infos
+
+Il existe aussi des informations qui peuvent s'afficher dans le terminal. Les informations sont écrites entre les balises `[INFO]`. Nous allons les lister ici et vous donner les explications.
+
+### Infos liées au test
+
+#### TESTING
+
+- Indique qui le test est en cours d'exécution.
+
 ## Conclusion
 
-Pour conclure, nous avons pu réaliser un moteur de recherche en Python qui permet de faire des recherches sur deux sites de documents en ligne, à savoir [Reddit](https://www.reddit.com/) et [Arxiv](https://export.arxiv.org/). Cette version permet de faire des recherches sur ces les deux sites et ensuite faire quelques statstique sur les documents retournés. Et enfin, il vous permet de faire des recherches sur toutes les documents retournés par le moteur de recherche. Nous allons ajouer une nouvelle fonctionnalité qui est l'interface graphique dans la version 3 de notre projet. Pour plus d'informations.
+Pour conclure, nous avons pu réaliser un moteur de recherche en Python qui permet de faire des recherches sur deux sites de documents en ligne, à savoir [Reddit](https://www.reddit.com/) et [Arxiv](https://export.arxiv.org/). Cette version permet de faire des recherches sur ces deux sites en passant un mot clé et un nombre de documents à retourner. Les documents ne sont pas stockés dans une base de données, mais ils sont stockés dans un fichier apart. Avec le système de ranking, nous avons pu classer les documents retournés par le moteur de recherche. Ensuite, on va afficher les documents retournés dans le terminal ou bien dans l'interface graphique (Jupiter Notebook), il est conseillé d'utiliser le terminal pour une meilleure expérience.
+
+Malheureusement, nous n'avons pas pu faire la version 3 qui consiste à faire un moteur de recherche via un interface graphique. Nous n'avons pas eu le temps de le faire, mais nous avons pu faire la version 1 et la version 2.
+
+## Améliorations
+
+Pour améliorer le projet, nous pouvons faire les améliorations suivantes :
+
+- Ajouter plus de sites de documents en ligne.
+- Ajouter un interface graphique pour la version 3.
+- Garder un grand nombre de documents dans le fichier `corpus.pkl` pour avoir plus de documents à retourner.
+- Ajouter plus de fonctionnalités pour la version 2 notamment la possibilité d'avoir quelqeus graphiques pour mieux visualiser les résultats.
+- Ajouter un système de pagination pour les resultats retournés.
+- Ajouter un système de recherche par catégorie peut être intéressant.
+- Ajouter un système de recherche par date.
+- Ajouter un système de recherche par auteur.
+- Ajouter un système de recherche par langue était dans nos plans, mais nous n'avons pas eu le temps de le faire.
+
+## Remerciements
+
+Pour finir, nous tenons à remercier notre professeur de Python, M. [Julien Velcin](https://velcin.github.io/) pour son aide et ses conseils et ses TDs.
