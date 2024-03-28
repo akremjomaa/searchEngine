@@ -185,4 +185,4 @@ Pour améliorer le projet, nous pouvons faire les améliorations suivantes :
 
 ## Remerciements
 
-Pour finir, nous tenons à remercier notre professeur de Python, M. [Julien Velcin](https://velcin.github.io/) pour son aide et ses conseils et ses TDs.
+Pour finir, nous tenons à remercier notre professeur de Python, M. [Julien Velcin](https://velcin.github.io/) pour son aide et ses conseils.
